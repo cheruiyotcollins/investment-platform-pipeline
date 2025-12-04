@@ -12,9 +12,9 @@ pipeline {
         DOCKERHUB = credentials('dockerhub-creds')
 
         // GitHub repositories
-        GITHUB_BACKEND_REPO = 'kelvincollins86/investment-platform-backend'
-        GITHUB_FRONTEND_REPO = 'kelvincollins86/investment-platform-frontend'
-        GITHUB_PIPELINE_REPO = 'kelvincollins86/investment-platform-pipeline'
+        GITHUB_BACKEND_REPO = 'cheruiyotcollins/investment-platform-backend'
+        GITHUB_FRONTEND_REPO = 'cheruiyotcollins/investment-platform-frontend'
+        GITHUB_PIPELINE_REPO = 'cheruiyotcollins/investment-platform-pipeline'
 
         // Docker images
         BACKEND_IMAGE = "kelvincollins86/investment-backend"
