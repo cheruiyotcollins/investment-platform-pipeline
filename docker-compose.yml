@@ -1,0 +1,60 @@
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: investment_schema
+      POSTGRES_USER: collo
+      POSTGRES_PASSWORD: Kipkirui92?
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U collo -d investment_schema"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../investment-platform-backend
+      dockerfile: Dockerfile
+    container_name: spring_backend
+    ports:
+      - "9002:9002"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/investment_schema
+      SPRING_DATASOURCE_USERNAME: collo
+      SPRING_DATASOURCE_PASSWORD: Kipkirui92?
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SERVER_PORT: 9002
+      SERVER_ADDRESS: 0.0.0.0
+      JWT_SECRET: CvsHphcFevtdY3HnphT7gUvnIgDin5hlQG+9O1cCD7vhGEltf+QsEasz1n91kqFCf8vkB4RDnf5nAfblMR+CgA==
+      JWT_TOKEN_VALIDITY: 3600000
+      JWT_REFRESH_TOKEN_VALIDITY: 2592000000
+      LOGGING_LEVEL_HIBERNATE_SQL: DEBUG
+      LOGGING_LEVEL_HIBERNATE_TYPE: TRACE
+      LOGGING_LEVEL_COM_INVESTMENT_BACKEND_CONFIG: DEBUG
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../investment-platform-backend/uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ../investment-platform-frontend
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_API_URL: http://localhost:9002/api
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres_db_staging
+    environment:
+      POSTGRES_DB: ${DB_NAME:-investment_schema}
+      POSTGRES_USER: ${DB_USER:-collo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - investment-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-collo} -d ${DB_NAME:-investment_schema}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: kelvincollins86/investment-backend:${BUILD_TAG:-latest}
+    container_name: spring_backend_staging
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-investment_schema}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-collo}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_TOKEN_VALIDITY: 3600000
+      SERVER_PORT: 9002
+      SERVER_ADDRESS: 0.0.0.0
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_INVESTMENT: DEBUG
+    ports:
+      - "9002:9002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - investment-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9002/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    image: kelvincollins86/investment-frontend:${BUILD_TAG:-latest}
+    container_name: react_frontend_staging
+    environment:
+      REACT_APP_API_URL: http://localhost:9002/api
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - investment-network
+
+volumes:
+  postgres_data_staging:
+
+networks:
+  investment-network:
+    driver: bridge
