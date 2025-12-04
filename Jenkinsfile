@@ -28,7 +28,7 @@ pipeline {
     parameters {
         choice(
             name: 'BRANCH',
-            choices: ['main', 'master'],  // ✅ ADDED 'master' option
+            choices: ['master', 'main'],  // ✅ ADDED 'master' option
             description: 'Branch to build from'
         )
         // ... rest of parameters
